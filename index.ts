@@ -26,6 +26,8 @@ exec(command);
 
 function onScan(qrcode, status) {
   qrcodeTerminal.generate(qrcode, { small: true }); // show qrcode on console
+  const url = `https://wechaty.js.org/qrcode/${encodeURIComponent(qrcode)}`;
+  console.log(url);
 }
 
 function onLogin(user) {
