@@ -12,20 +12,21 @@ export type ParamsType = {
   stream: true;
 };
 
-export type ResponseType = {
-  data:
-    | {
-        id: string;
-        object: string;
-        created: number;
-        model: string;
-        choices: {
-          delta: {
-            content: string;
-          };
-          index: number;
-          finish_reason: string | null;
-        };
-      }
-    | AnyArr;
-};
+export type ResponseType {
+  choices: Choice[];
+  created: number;
+  id: string;
+  model: string;
+  object: string;
+}[];
+
+interface Choice {
+  delta: Delta;
+  finish_reason: null | string;
+  index: number;
+}
+
+interface Delta {
+  content: string;
+  role?: string;
+}

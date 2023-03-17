@@ -38,21 +38,24 @@ function onLogout(user) {
   loginUser = null;
 }
 
-const replaceAt = (str) => {
-  const reg = /@\w+/g;
-  return str.replace(reg, "");
+const replaceAt = (str: string) => {
+  return str.toLowerCase().replace(/@.*\s/, "");
 };
 
-const params: ParamsType = {
-  model: "gpt-3.5-turbo",
-  messages: [
+function renderInitMessage(): ParamsType["messages"] {
+  return [
     {
       role: "system",
       content: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${dayjs().format(
         "YYYY-MM-DD"
       )}')}`,
     },
-  ],
+  ];
+}
+
+const params: ParamsType = {
+  model: "gpt-3.5-turbo",
+  messages: renderInitMessage(),
   temperature: 0.6,
   stream: true,
 };
@@ -71,6 +74,11 @@ async function onMessage(msg: Message) {
     mentionIdList.includes(loginUser.payload.id)
   ) {
     const filterText = replaceAt(text);
+    if (filterText === "reset") {
+      params.messages = renderInitMessage();
+      room.say("已重置");
+      return;
+    }
     params.messages.push({
       role: "user",
       content: filterText,
@@ -80,20 +88,30 @@ async function onMessage(msg: Message) {
       headers: {
         Authorization: process.env.OPENAI_API_KEY,
         "Content-Type": "application/json",
-        cookie: process.env.COOKIE ? process.env.COOKIE : "",
+        cookie: process.env.COOKIE ?? "",
         origin: "chrome-extension://iaakpnchhognanibcahlpcplchdfmgma",
       },
       body: JSON.stringify(params),
     })
       .then((res) => res.text())
-      .then((m: ResponseType) => {
-        debugger;
+      .then((m: string) => {
+        const jsonData: ResponseType = m
+          .split("\n")
+          .filter((line) => line !== "" && line !== "data: [DONE]")
+          .map((line) => line.replace("data: ", ""))
+          .map((line) => JSON.parse(line));
+
+        const AiText = jsonData
+          .filter(({ choices: [{ finish_reason }] }) => !finish_reason)
+          .map(({ choices: [{ delta }] }) => delta.content)
+          .join("");
         params.messages.push({
           role: "assistant",
-          content: "",
+          content: AiText,
         });
+        room.say(AiText);
       })
-      .catch((e) => console.log(e));
+      .catch((e) => room.say("抱歉，出错了"));
   }
 }
 
