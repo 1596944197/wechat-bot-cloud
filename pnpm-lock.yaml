@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@types/node': ^18.15.3
   chatgpt: ^5.0.9
+  dayjs: ^1.11.7
   dotenv: ^16.0.3
   node-fetch: ^2.6.7
   qrcode-terminal: ^0.12.0
@@ -11,6 +12,7 @@ specifiers:
 
 dependencies:
   chatgpt: 5.0.10
+  dayjs: 1.11.7
   dotenv: 16.0.3
   node-fetch: 2.6.7
   qrcode-terminal: 0.12.0
@@ -984,6 +986,10 @@ packages:
     engines: {node: '>=0.10'}
     dependencies:
       assert-plus: 1.0.0
+    dev: false
+
+  /dayjs/1.11.7:
+    resolution: {integrity: sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==}
     dev: false
 
   /debounce-fn/5.1.2:

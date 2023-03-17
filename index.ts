@@ -1,8 +1,10 @@
 import { exec } from "child_process";
+import dayjs from "dayjs";
 import d from "dotenv";
 import fetch from "node-fetch";
 import qrcodeTerminal from "qrcode-terminal";
 import { log, Message, WechatyBuilder } from "wechaty";
+import type { AnyArr, ParamsType, ResponseType } from "./types";
 
 d.config();
 let command = "";
@@ -41,12 +43,25 @@ const replaceAt = (str) => {
   return str.replace(reg, "");
 };
 
+const params: ParamsType = {
+  model: "gpt-3.5-turbo",
+  messages: [
+    {
+      role: "system",
+      content: `You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: 2021-09-01\nCurrent date: ${dayjs().format(
+        "YYYY-MM-DD"
+      )}')}`,
+    },
+  ],
+  temperature: 0.6,
+  stream: true,
+};
+
 async function onMessage(msg: Message) {
   const text = msg.text();
   const room = msg.room();
   const type = msg.type();
 
-  debugger;
   const mentionIdList: AnyArr = msg.payload!["mentionIdList"];
   if (
     room &&
@@ -55,6 +70,11 @@ async function onMessage(msg: Message) {
     mentionIdList.length === 1 &&
     mentionIdList.includes(loginUser.payload.id)
   ) {
+    const filterText = replaceAt(text);
+    params.messages.push({
+      role: "user",
+      content: filterText,
+    });
     fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -63,20 +83,16 @@ async function onMessage(msg: Message) {
         cookie: process.env.COOKIE ? process.env.COOKIE : "",
         origin: "chrome-extension://iaakpnchhognanibcahlpcplchdfmgma",
       },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        stream: true,
-        temperature: 0.6,
-        messages: [
-          {
-            content: text,
-            role: "user",
-          },
-        ],
-      }),
+      body: JSON.stringify(params),
     })
       .then((res) => res.text())
-      .then((m) => room.say(m))
+      .then((m: ResponseType) => {
+        debugger;
+        params.messages.push({
+          role: "assistant",
+          content: "",
+        });
+      })
       .catch((e) => console.log(e));
   }
 }
