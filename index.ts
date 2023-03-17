@@ -85,16 +85,21 @@ async function onMessage(msg: Message) {
       role: "user",
       content: filterText,
     });
-    fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-        cookie: process.env.COOKIE ?? "",
-        origin: "chrome-extension://iaakpnchhognanibcahlpcplchdfmgma",
-      },
-      body: JSON.stringify(params),
-    })
+    fetch(
+      `${
+        process.env.OPENAI_API_BASE_URL || "https://api.openai.com"
+      }/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+          cookie: process.env.COOKIE ?? "",
+          origin: "chrome-extension://iaakpnchhognanibcahlpcplchdfmgma",
+        },
+        body: JSON.stringify(params),
+      }
+    )
       .then((res) => res.text())
       .then((m: string) => {
         const jsonData: ResponseType = m
@@ -113,7 +118,10 @@ async function onMessage(msg: Message) {
         });
         room.say(AiText);
       })
-      .catch((e) => room.say("抱歉，出错了"));
+      .catch(
+        (e) => room.say("抱歉，出错了"),
+        (params.messages = renderInitMessage())
+      );
   }
 }
 
